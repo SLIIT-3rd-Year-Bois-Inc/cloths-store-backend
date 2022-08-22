@@ -1,6 +1,8 @@
 import express from "express";
 import mongoose from "mongoose";
 import { customerRouter } from "./controllers/customer";
+import { stockRouter } from "./controllers/stock";
+
 import { logger, loggerMiddleware } from "./logger";
 import cors from "cors";
 import bodyParser from "body-parser";
@@ -31,6 +33,7 @@ async function main() {
 
   // Attach routers
   app.use("/api/customer", customerRouter());
+  app.use("/api/stock", stockRouter());
 
   app.get("/", (_, res) =>
     res.send("Hello! This is the Cloths Store Backend.")
