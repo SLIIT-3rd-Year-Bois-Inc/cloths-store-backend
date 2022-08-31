@@ -16,8 +16,13 @@ async function main() {
   // Connect to Database
   await mongoose.connect(mongo_uri);
 
-  // Allow API from all origins
-  app.use(cors());
+  // Allow API from specified origin
+  app.use(
+    cors({
+      credentials: true,
+      origin: process.env.UI_ORIGIN || "http://localhost:3000",
+    })
+  );
 
   // Attach middleware
   app.use(loggerMiddleware);
