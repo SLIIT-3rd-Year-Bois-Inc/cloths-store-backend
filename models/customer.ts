@@ -1,6 +1,12 @@
-const { default: mongoose } = require("mongoose");
+import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
+import { logger } from "../logger";
 
-const customerSchema = new mongoose.Schema({
+interface ICustomerMethods {
+  passwordMatch: (candidatePassword: string) => Promise<boolean>;
+}
+
+const customerSchema = new mongoose.Schema<{}, {}, ICustomerMethods>({
   f_name: {
     type: String,
     required: true,
@@ -25,7 +31,7 @@ const customerSchema = new mongoose.Schema({
     {
       _id: {
         type: mongoose.Types.ObjectId,
-        default: mongoose.Types.ObjectId().toHexString(),
+        default: new mongoose.Types.ObjectId().toHexString(),
         index: { sparse: true },
       },
       contact_name: {
@@ -70,7 +76,7 @@ const customerSchema = new mongoose.Schema({
   gender: {
     type: String,
     required: true,
-    enum: ["F", "M", "O", "N"],
+    enum: ["female", "male", "rather-not-say", "N"],
   },
   dob: { type: Date, required: true },
 });
@@ -82,6 +88,26 @@ customerSchema.path("email").validate(async (email: string) => {
   return emailRegex.test(email);
 }, "Invalid email");
 
+// Hash the password
+customerSchema.pre("save", function (next) {
+  let customer = this as any;
+  logger.debug(customer);
+
+  // Only hash the password if it has been modified (or is new)
+  if (!customer.isModified("password")) return next();
+
+  const salt = bcrypt.genSaltSync(10);
+  const hashedPassword = bcrypt.hashSync(customer.password, salt);
+
+  customer.password = hashedPassword;
+  next();
+});
+
+customerSchema.methods.passwordMatch = async function (
+  candidatePassword: string
+) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
 /* customerSchema
     .path('dob')
     .validate(async (date: string) => {
