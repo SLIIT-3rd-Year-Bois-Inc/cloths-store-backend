@@ -2,8 +2,10 @@ import express from "express";
 import mongoose from "mongoose";
 import { customerRouter } from "./controllers/customer";
 import { stockRouter } from "./controllers/stock";
+
 // import { reviewRouter } from "./controllers/reviews-controller"
 const reviewRouter = require("./controllers/reviews-controller");
+import { clothsNeedsRouter } from "./controllers/clothsNeeds";
 
 import { logger, loggerMiddleware } from "./logger";
 import cors from "cors";
@@ -42,6 +44,8 @@ async function main() {
   app.use("/api/customer", customerRouter());
   app.use("/api/stock", stockRouter());
   app.use("/api/review", reviewRouter);
+
+  app.use("/api/clothNeeds", clothsNeedsRouter());
 
   app.get("/", (_, res) =>
     res.send("Hello! This is the Cloths Store Backend.")
