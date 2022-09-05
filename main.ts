@@ -2,6 +2,8 @@ import express from "express";
 import mongoose from "mongoose";
 import { customerRouter } from "./controllers/customer";
 import { stockRouter } from "./controllers/stock";
+// import { reviewRouter } from "./controllers/reviews-controller"
+const reviewRouter = require("./controllers/reviews-controller");
 
 import { logger, loggerMiddleware } from "./logger";
 import cors from "cors";
@@ -39,6 +41,7 @@ async function main() {
   // Attach routers
   app.use("/api/customer", customerRouter());
   app.use("/api/stock", stockRouter());
+  app.use("/api/review", reviewRouter);
 
   app.get("/", (_, res) =>
     res.send("Hello! This is the Cloths Store Backend.")
