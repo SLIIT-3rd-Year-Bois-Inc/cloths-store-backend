@@ -24,9 +24,11 @@ const productSchema = new Schema({
     },
   ],
   imagesUrls: [
-    {
-      type: String,
-    },
+    [
+      {
+        type: String,
+      },
+    ],
   ],
   description: {
     type: String,

@@ -6,6 +6,16 @@ let Product = require("../models/Product");
  * @param {express.Response} res
  */
 function getProductsForCustomer(req, res) {
+  Product.find({ archived: false })
+    .select("_id")
+    .then((product) => {
+      res.json(product);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+}
+function getProductsForAdmin(req, res) {
   Product.find()
     .select("_id")
     .then((product) => {
@@ -121,6 +131,7 @@ export function stockRouter() {
   const router = express.Router();
 
   router.get("/getCusProducts", getProductsForCustomer);
+  router.get("/getAdminProducts", getProductsForAdmin);
   router.get("/getProduct", getProduct);
   router.post("/newProduct", addNewProduct);
   router.delete("/deleteProduct", deleteProduct);
