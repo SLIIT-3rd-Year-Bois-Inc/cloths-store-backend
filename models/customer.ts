@@ -106,6 +106,7 @@ customerSchema.pre("save", function (next) {
 customerSchema.methods.passwordMatch = async function (
   candidatePassword: string
 ) {
+  console.log(this);
   return await bcrypt.compare(candidatePassword, this.password);
 };
 /* customerSchema
