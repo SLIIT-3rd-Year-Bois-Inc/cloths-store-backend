@@ -5,8 +5,6 @@ const Review = require("../models/reviews");
 
 const router = express.Router();
 
-// const Storage = multer.diskStorage({})
-
 // Add review
 router.post("/addReview", async (req, res) => {
   try {
@@ -36,9 +34,9 @@ router.get("/getReviews", async (req, res) => {
 router.route("/updateReview/:id").put(async (req, res) => {
   console.log("print");
   const reviewID = req.params.id;
-  const { review, rating } = req.body;
+  const { review, rating, image1, image2, image3 } = req.body;
 
-  const updateReview = { review, rating };
+  const updateReview = { review, rating, image1, image2, image3 };
 
   const update = await Review.findByIdAndUpdate(reviewID, updateReview)
     .then(() => {
@@ -49,6 +47,21 @@ router.route("/updateReview/:id").put(async (req, res) => {
       res
         .status(500)
         .send({ status: "error", message: "Error with Updating data" });
+    });
+});
+
+//Deleting data
+router.route("/deleteReviews/:id").delete(async (req, res) => {
+  let reviewID = req.params.id;
+  await Review.findByIdAndDelete(reviewID)
+    .then(() => {
+      res.status(200).send({ status: "Review Deleted" });
+    })
+    .catch((err) => {
+      console.log(err.message);
+      res
+        .status(500)
+        .send({ status: "error", message: "Error with deleting data" });
     });
 });
 
