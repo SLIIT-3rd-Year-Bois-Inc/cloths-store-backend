@@ -14,25 +14,26 @@ const reviewsSchema = new mongoose.Schema({
     required: false,
   },
 
-  // star :{
-  //     type : Number,
-  //     required : true
-  // },
-  // placedTime: {
-  //     type: Date,
-  //     required: true,
-  //     default: new Date()
-  // },
-  // name :{
-  //     type :String,
-  //     required : true}
-  // ,
-  // email: {
-  //     type :String,
-  //     required : false
-  // }
-
-  // put for images too
+  image1: {
+    type: String,
+    required: false,
+  },
+  image2: {
+    type: String,
+    required: false,
+  },
+  image3: {
+    type: String,
+    required: false,
+  },
+  rating: {
+    type: Number,
+    required: false,
+  },
+  date: {
+    type: String,
+    required: false,
+  },
 });
 
 module.exports = mongoose.model("Reviews", reviewsSchema);

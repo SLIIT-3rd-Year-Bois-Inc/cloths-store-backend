@@ -5,6 +5,7 @@ import { stockRouter } from "./controllers/stock";
 
 // import { reviewRouter } from "./controllers/reviews-controller"
 const reviewRouter = require("./controllers/reviews-controller");
+const questionRouter = require("./controllers/questions-controller");
 import { clothsNeedsRouter } from "./controllers/clothsNeeds";
 
 import { logger, loggerMiddleware } from "./logger";
@@ -44,6 +45,7 @@ async function main() {
   app.use("/api/customer", customerRouter());
   app.use("/api/stock", stockRouter());
   app.use("/api/review", reviewRouter);
+  app.use("/api/question", questionRouter);
 
   app.use("/api/clothNeeds", clothsNeedsRouter());
 
