@@ -12,7 +12,7 @@ import { logger, loggerMiddleware } from "./logger";
 import cors from "cors";
 import bodyParser from "body-parser";
 import session from "express-session";
-import { customerAdminRouter } from "./controllers/customer_admin";
+import { customerAdminRouter } from "./controllers/customer-admin";
 
 async function main() {
   const app = express();
@@ -49,7 +49,7 @@ async function main() {
   app.use("/api/question", questionRouter);
   app.use("/api/clothNeeds", clothsNeedsRouter());
   app.use("/api/admin/customer", customerAdminRouter());
-  
+
   app.get("/", (_, res) =>
     res.send("Hello! This is the Cloths Store Backend.")
   );
