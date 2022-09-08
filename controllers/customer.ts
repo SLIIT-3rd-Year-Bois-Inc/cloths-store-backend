@@ -126,6 +126,38 @@ async function Me(req: Request, res: Response) {
   }
 }
 
+async function patchMe(req: Request, res: Response) {
+  try {
+    let id = req.session.customer_id;
+    let update = req.body;
+
+    // Only let update specified fields
+    const allowed = ["f_name", "l_name", "email", "dob"];
+    const m_update: any = {};
+
+    for (let key in update) {
+      if (allowed.includes(key)) {
+        m_update[key] = { $set: update[key] };
+      }
+    }
+
+    logger.debug(update);
+    logger.debug(m_update);
+
+    let result = await Customer.findByIdAndUpdate(id, update).exec();
+
+    if (!result) {
+      res.sendStatus(500);
+      return;
+    }
+
+    res.sendStatus(200);
+  } catch (e) {
+    res.sendStatus(500);
+    logger.error(e);
+  }
+}
+
 export function customerRouter() {
   const router = express.Router();
 
@@ -134,6 +166,7 @@ export function customerRouter() {
   router.get("/session", customerAuthRequired, sessionDetails);
   router.delete("/session", customerAuthRequired, signOut);
   router.get("/me", customerAuthRequired, Me);
+  router.patch("/me", customerAuthRequired, patchMe);
 
   return router;
 }
