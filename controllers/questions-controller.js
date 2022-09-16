@@ -1,6 +1,6 @@
 import express from "express";
 const Questions = require("../models/questions");
-
+const page_size = 3;
 const router = express.Router();
 
 // Add Questions
@@ -20,9 +20,23 @@ router.post("/addQuestion", async (req, res) => {
 // View Questions
 router.get("/getQuestion", async (req, res) => {
   try {
-    Questions.find().then((question) => {
-      res.json(question);
+    const page = parseInt(req.query.page || "0");
+    const serach = req.query.search || "";
+    const total = await Questions.countDocuments({
+      question: { $regex: serach, $options: "i" },
     });
+    const total2 = total;
+
+    Questions.find({ question: { $regex: serach, $options: "i" } })
+      .limit(page_size)
+      .skip(page_size * page)
+      .then((question) => {
+        res.json({
+          question,
+          total2,
+          total: Math.ceil(total / page_size),
+        });
+      });
   } catch (e) {
     res.status(500).json({ status: "error", message: "something went wrong" });
   }
