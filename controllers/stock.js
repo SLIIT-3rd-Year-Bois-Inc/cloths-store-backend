@@ -6,17 +6,28 @@ let Product = require("../models/Product");
  * @param {express.Response} res
  */
 function getProductsForCustomer(req, res) {
+  let sortingOption = req.query.sortingOption;
+
   Product.find({ archived: false })
+    .sort({ price: sortingOption })
     .select("_id")
     .then((product) => {
       res.json(product);
+      console.log(product);
     })
     .catch((err) => {
       console.log(err);
     });
 }
+
+/**
+ * @param {express.Request} req
+ * @param {express.Response} res
+ */
 function getProductsForAdmin(req, res) {
+  let sortingOption = req.query.sortingOption;
   Product.find()
+    .sort({ price: sortingOption })
     .select("_id")
     .then((product) => {
       res.json(product);
