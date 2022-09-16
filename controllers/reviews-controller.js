@@ -2,7 +2,7 @@ import express from "express";
 import reviews from "../models/reviews";
 // import { Customer } from "../models/customer";
 const Review = require("../models/reviews");
-
+const page_size = 3;
 const router = express.Router();
 
 // Add review
@@ -22,9 +22,18 @@ router.post("/addReview", async (req, res) => {
 // View Reviews
 router.get("/getReviews", async (req, res) => {
   try {
-    Review.find().then((review) => {
-      res.json(review);
-    });
+    const page = parseInt(req.query.page || "0");
+    const total = await Review.countDocuments({});
+
+    Review.find()
+      .limit(page_size)
+      .skip(page_size * page)
+      .then((review) => {
+        res.json({
+          review,
+          total: Math.ceil(total / page_size),
+        });
+      });
   } catch (e) {
     res.status(500).json({ status: "error", message: "something went wrong" });
   }
