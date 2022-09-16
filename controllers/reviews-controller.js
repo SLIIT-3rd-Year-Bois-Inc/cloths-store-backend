@@ -23,14 +23,24 @@ router.post("/addReview", async (req, res) => {
 router.get("/getReviews", async (req, res) => {
   try {
     const page = parseInt(req.query.page || "0");
-    const total = await Review.countDocuments({});
+    const serach = req.query.search || "";
+    let rating = req.query.rating || "";
+    const total = await Review.countDocuments({
+      review: { $regex: serach, $options: "i" },
+      rating: { $regex: rating },
+    });
+    const total2 = total;
 
-    Review.find()
+    Review.find({
+      review: { $regex: serach, $options: "i" },
+      rating: { $regex: rating },
+    })
       .limit(page_size)
       .skip(page_size * page)
       .then((review) => {
         res.json({
           review,
+          total2,
           total: Math.ceil(total / page_size),
         });
       });
