@@ -10,12 +10,13 @@ const productSchema = new Schema({
   },
   price: {
     type: Number,
-    index: true,
+    sparse: true,
     required: true,
   },
   gender: {
     type: String,
     maxlength: 1,
+    index: true,
     required: true,
   },
   tags: [
@@ -42,10 +43,11 @@ const productSchema = new Schema({
   },
   archived: {
     type: Boolean,
+    index: true,
     default: false,
   },
 });
-
+productSchema.index({ tags: 1 });
 const Product = mongoose.model("Product", productSchema);
 
 module.exports = Product;

@@ -7,10 +7,14 @@ let Product = require("../models/Product");
  */
 function getProductsForCustomer(req, res) {
   let sortingOption = req.query.sortingOption;
+  let findObj = JSON.parse(req.query.tempSearchObj);
+  console.log(findObj);
+  if (req.query.gender) {
+    findObj["gernder"] = req.query.gender;
+  }
 
-  Product.find({ archived: false })
+  Product.find(findObj)
     .sort({ price: sortingOption })
-    .select("_id")
     .then((product) => {
       res.json(product);
       console.log(product);
@@ -26,7 +30,8 @@ function getProductsForCustomer(req, res) {
  */
 function getProductsForAdmin(req, res) {
   let sortingOption = req.query.sortingOption;
-  Product.find()
+  let findObj = JSON.parse(req.query.tempSearchObj);
+  Product.find(findObj)
     .sort({ price: sortingOption })
     .select("_id")
     .then((product) => {
@@ -138,16 +143,108 @@ async function archiveProduct(req, res) {
 
 function deleteProduct(req, res) {}
 
+async function searchItemsByName(req, res) {
+  const { search } = req.query;
+  console.log(search);
+  let items;
+  if (search) {
+    // If search exists, the user typed in the search bar
+    items = await Product.aggregate([
+      {
+        $search: {
+          index: "default",
+          autocomplete: {
+            query: search, // noticed we assign a dynamic value to "query"
+            path: "name",
+          },
+        },
+      },
+      {
+        $limit: 5,
+      },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          price: 1,
+          gender: 1,
+          tags: 1,
+          imagesUrls: 1,
+          description: 1,
+          color: 1,
+          quantity: 1,
+          archived: 1,
+        },
+      },
+    ]);
+  } else {
+    // The search is empty so the value of "search" is undefined
+    posts = await Product.find().sort({ createdAt: "desc" });
+    console.log(search);
+  }
+
+  return res.status(200).json({
+    statusCode: 200,
+    message: "Fetched posts",
+    data: { items },
+  });
+}
+
+function getGenderCounts(req, res) {
+  Product.aggregate([
+    {
+      $group: {
+        _id: "$gender",
+        count: { $sum: 1 }, // this means that the count will increment by 1
+      },
+    },
+  ])
+    .then((result) => {
+      res.json(result);
+    })
+    .catch((err) => {
+      res.json(err);
+    });
+}
+
+function getTypeCounts(req, res) {
+  let findObj = JSON.parse(req.query.tempSearchObj);
+  Product.aggregate([
+    {
+      $match: findObj,
+    },
+    {
+      $unwind: "$tags",
+    },
+    {
+      $group: {
+        _id: "$tags",
+        count: { $sum: 1 }, // this means that the count will increment by 1
+      },
+    },
+  ])
+    .then((result) => {
+      res.json(result);
+    })
+    .catch((err) => {
+      res.json(err);
+    });
+}
+
 export function stockRouter() {
   const router = express.Router();
 
   router.get("/getCusProducts", getProductsForCustomer);
   router.get("/getAdminProducts", getProductsForAdmin);
   router.get("/getProduct", getProduct);
+  router.get("/searchProduct", searchItemsByName);
   router.post("/newProduct", addNewProduct);
   router.delete("/deleteProduct", deleteProduct);
   router.put("/archiveProduct", archiveProduct);
   router.put("/updateProduct", updateProduct);
+  //report
+  router.get("/getGenderCount", getGenderCounts);
+  router.get("/getTypeCounts", getTypeCounts);
 
   return router;
 }
