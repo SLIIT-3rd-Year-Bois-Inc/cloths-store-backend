@@ -170,8 +170,13 @@ async function popularProducts(req: Request, res: Response) {
     return;
   }
 
+  logger.debug(limit);
   try {
-    let products = await Product.find({ sold: -1 }).limit(limit).exec();
+    let products = await Product.find({})
+      .sort({ sold: -1 })
+      .limit(limit)
+      .exec();
+    logger.debug(products);
     res.status(200).json(products);
   } catch (e) {
     res.sendStatus(500);
