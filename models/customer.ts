@@ -123,4 +123,5 @@ customerSchema.methods.passwordMatch = async function (
     }, "Date needs to be at least 18 years ago")
  */
 
+customerSchema.index({ f_name: "text", l_name: "text", email: "text" });
 export const Customer = mongoose.model("Customer", customerSchema);
