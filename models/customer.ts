@@ -79,6 +79,10 @@ const customerSchema = new mongoose.Schema<{}, {}, ICustomerMethods>({
     enum: ["female", "male", "rather-not-say", "N"],
   },
   dob: { type: Date, required: true },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 // Validates email
