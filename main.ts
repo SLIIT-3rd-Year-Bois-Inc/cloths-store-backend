@@ -13,6 +13,7 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import session from "express-session";
 import { customerAdminRouter } from "./controllers/customer-admin";
+import { adminRouter } from "./controllers/admin";
 
 async function main() {
   const app = express();
@@ -48,6 +49,7 @@ async function main() {
   app.use("/api/review", reviewRouter);
   app.use("/api/question", questionRouter);
   app.use("/api/clothNeeds", clothsNeedsRouter());
+  app.use("/api/admin/", adminRouter());
   app.use("/api/admin/customer", customerAdminRouter());
 
   app.get("/", (_, res) =>

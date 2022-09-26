@@ -64,7 +64,7 @@ async function signIn(req: Request, res: Response) {
 async function sessionDetails(req: Request, res: Response) {
   try {
     let id = req.session.customer_id;
-    let customer = await Customer.findById(id).exec();
+    let customer = await Customer.findById(id, { f_name: 1, l_name: 1 }).exec();
 
     if (!customer) {
       res.sendStatus(401);
@@ -72,13 +72,7 @@ async function sessionDetails(req: Request, res: Response) {
     }
 
     res.status(200);
-
-    let object = customer.toObject() as any;
-
-    res.json({
-      f_name: object.f_name,
-      l_name: object.l_name,
-    });
+    res.json(customer);
   } catch (e) {
     res.sendStatus(500);
     logger.error(e);
@@ -110,6 +104,7 @@ async function Me(req: Request, res: Response) {
       l_name: 1,
       email: 1,
       dob: 1,
+      image: 1,
     }).exec();
 
     if (!customer) {
@@ -134,7 +129,7 @@ async function patchMe(req: Request, res: Response) {
     let update = req.body;
 
     // Only let update specified fields
-    const allowed = ["f_name", "l_name", "email", "dob"];
+    const allowed = ["f_name", "l_name", "email", "dob", "image"];
     const m_update: any = {};
 
     for (let key in update) {
