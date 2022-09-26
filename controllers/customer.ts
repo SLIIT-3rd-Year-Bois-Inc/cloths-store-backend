@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import { logger } from "../logger";
 import { customerAuthRequired } from "../middleware/auth";
+import { cleanBody } from "../middleware/sanitize";
 import { Customer } from "../models/customer";
 const Product = require("../models/Product");
 
@@ -216,6 +217,7 @@ async function deleteAccount(req: Request, res: Response) {
 export function customerRouter() {
   const router = express.Router();
 
+  router.use(cleanBody);
   router.post("/sign-up", signUp);
   router.post("/session/new", signIn);
   router.get("/products/popular", popularProducts);
