@@ -79,6 +79,10 @@ const customerSchema = new mongoose.Schema<{}, {}, ICustomerMethods>({
     enum: ["female", "male", "rather-not-say", "N"],
   },
   dob: { type: Date, required: true },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 // Validates email
@@ -119,4 +123,5 @@ customerSchema.methods.passwordMatch = async function (
     }, "Date needs to be at least 18 years ago")
  */
 
+customerSchema.index({ f_name: "text", l_name: "text", email: "text" });
 export const Customer = mongoose.model("Customer", customerSchema);

@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import { logger } from "../logger";
 import { customerAuthRequired } from "../middleware/auth";
 import { Customer } from "../models/customer";
+const Product = require("../models/Product");
 
 async function signUp(req: Request, res: Response) {
   try {
@@ -158,15 +159,71 @@ async function patchMe(req: Request, res: Response) {
   }
 }
 
+async function popularProducts(req: Request, res: Response) {
+  let limit: number;
+  try {
+    limit = parseInt(req.params.limit) || 10;
+  } catch (e) {
+    logger.error(e);
+    res.sendStatus(400);
+    return;
+  }
+
+  try {
+    let products = await Product.find({ sold: -1 }).limit(limit).exec();
+    res.status(200).json(products);
+  } catch (e) {
+    res.sendStatus(500);
+    logger.error(e);
+  }
+}
+
+async function addToWishlist(req: Request, res: Response) {}
+
+async function getWishlist(req: Request, res: Response) {}
+
+async function deleteAccount(req: Request, res: Response) {
+  try {
+    // Check the password
+    let customer = await Customer.findById(req.session.customer_id);
+    let { password } = req.body;
+
+    if (!customer) {
+      res.sendStatus(401);
+      logger.debug("Customer not found");
+      return;
+    }
+
+    if (!(await customer.passwordMatch(password))) {
+      res.sendStatus(401);
+      logger.debug("Password doesn't match");
+      return;
+    }
+
+    let result = await Customer.findByIdAndUpdate(req.session.customer_id, {
+      disabled: true,
+    }).exec();
+
+    logger.debug(result);
+
+    res.sendStatus(200);
+  } catch (e) {
+    res.sendStatus(500);
+    logger.error(e);
+  }
+}
+
 export function customerRouter() {
   const router = express.Router();
 
   router.post("/sign-up", signUp);
   router.post("/session/new", signIn);
+  router.get("/products/popular", popularProducts);
   router.get("/session", customerAuthRequired, sessionDetails);
   router.delete("/session", customerAuthRequired, signOut);
   router.get("/me", customerAuthRequired, Me);
   router.patch("/me", customerAuthRequired, patchMe);
+  router.post("/me/delete", customerAuthRequired, deleteAccount);
 
   return router;
 }
