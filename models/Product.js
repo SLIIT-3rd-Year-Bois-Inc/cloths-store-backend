@@ -46,6 +46,10 @@ const productSchema = new Schema({
     index: true,
     default: false,
   },
+  sold: {
+    type: Number,
+    default: 0,
+  },
 });
 productSchema.index({ tags: 1 });
 const Product = mongoose.model("Product", productSchema);

@@ -33,7 +33,6 @@ function getProductsForAdmin(req, res) {
   let findObj = JSON.parse(req.query.tempSearchObj);
   Product.find(findObj)
     .sort({ price: sortingOption })
-    .select("_id")
     .then((product) => {
       res.json(product);
     })
@@ -141,23 +140,38 @@ async function archiveProduct(req, res) {
     });
 }
 
-function deleteProduct(req, res) {}
+function deleteProduct(req, res) {
+  let ID = req.query.id;
+  Product.findByIdAndDelete(ID)
+    .then((product) => {
+      res.status(200).send({ status: "Product Deleted", deleted: product });
+    })
+    .catch((err) => {
+      console.log(err.message);
+      res
+        .status(500)
+        .send({ status: "error", message: "Error with deleting data" });
+    });
+}
 
 async function searchItemsByName(req, res) {
-  const { search } = req.query;
-  console.log(search);
+  const searchValue = req.query.searchValue;
+  let findObj = JSON.parse(req.query.tempSearchObj);
   let items;
-  if (search) {
+  if (searchValue) {
     // If search exists, the user typed in the search bar
     items = await Product.aggregate([
       {
         $search: {
           index: "default",
           autocomplete: {
-            query: search, // noticed we assign a dynamic value to "query"
+            query: searchValue, // noticed we assign a dynamic value to "query"
             path: "name",
           },
         },
+      },
+      {
+        $match: findObj,
       },
       {
         $limit: 5,
@@ -180,7 +194,6 @@ async function searchItemsByName(req, res) {
   } else {
     // The search is empty so the value of "search" is undefined
     posts = await Product.find().sort({ createdAt: "desc" });
-    console.log(search);
   }
 
   return res.status(200).json({
