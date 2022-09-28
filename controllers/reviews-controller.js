@@ -1,15 +1,28 @@
 import express from "express";
 import reviews from "../models/reviews";
 // import { Customer } from "../models/customer";
+import { customerAuthRequired } from "../middleware/auth";
+import { Customer } from "../models/customer";
 const Review = require("../models/reviews");
 const page_size = 3;
 const router = express.Router();
 
 // Add review
-router.post("/addReview", async (req, res) => {
+router.post("/addReview", customerAuthRequired, async (req, res) => {
   try {
-    const data = req.body;
+    let data = req.body;
+    console.dir(req.session.customer_id);
+    data.customerID = req.session.customer_id;
     console.dir(data);
+
+    let customer = await Customer.findById(data.customerID, {
+      f_name: 1,
+      l_name: 1,
+    });
+
+    data.fname = customer.f_name;
+    data.lname = customer.l_name;
+
     const newTest = new Review(data);
     await newTest.save();
   } catch (e) {
@@ -25,15 +38,18 @@ router.get("/getReviews", async (req, res) => {
     const page = parseInt(req.query.page || "0");
     const serach = req.query.search || "";
     let rating = req.query.rating || "";
+    let pid = req.query.pid || "";
     const total = await Review.countDocuments({
       review: { $regex: serach, $options: "i" },
       rating: { $regex: rating },
+      productID: { $regex: pid },
     });
     const total2 = total;
 
     Review.find({
       review: { $regex: serach, $options: "i" },
       rating: { $regex: rating },
+      productID: { $regex: pid },
     })
       .limit(page_size)
       .skip(page_size * page)
