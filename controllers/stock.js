@@ -1,5 +1,6 @@
 import express, { Request, response, Response } from "express";
 let Product = require("../models/Product");
+import { adminAuthRequired } from "../middleware/auth";
 
 /**
  * @param {express.Request} req
@@ -244,6 +245,20 @@ function getTypeCounts(req, res) {
     });
 }
 
+//get min max values
+async function getMinMaxValues(req, res) {
+  let maxPrice = await Product.find({})
+    .select("price")
+    .sort({ price: -1 })
+    .limit(1);
+  let minPrice = await Product.find({})
+    .select("price")
+    .sort({ price: 1 })
+    .limit(1);
+
+  res.json({ minPrice: minPrice[0].price, maxPrice: maxPrice[0].price });
+}
+
 export function stockRouter() {
   const router = express.Router();
 
@@ -253,11 +268,12 @@ export function stockRouter() {
   router.get("/searchProduct", searchItemsByName);
   router.post("/newProduct", addNewProduct);
   router.delete("/deleteProduct", deleteProduct);
-  router.put("/archiveProduct", archiveProduct);
+  router.put("/archiveProduct", adminAuthRequired, archiveProduct);
   router.put("/updateProduct", updateProduct);
   //report
   router.get("/getGenderCount", getGenderCounts);
   router.get("/getTypeCounts", getTypeCounts);
+  router.get("/getMinMaxPrices", getMinMaxValues);
 
   return router;
 }
