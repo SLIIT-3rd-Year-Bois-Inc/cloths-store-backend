@@ -1,14 +1,6 @@
 const { default: mongoose } = require("mongoose");
 
 const reviewsSchema = new mongoose.Schema({
-  // customer_id :{
-  //     type: mongoose.Types.ObjectId,
-  //     required: true
-  // },
-  // product_id :{
-  //     type: mongoose.Types.ObjectId,
-  //     required: true
-  // },
   review: {
     type: String,
     required: false,
@@ -31,6 +23,22 @@ const reviewsSchema = new mongoose.Schema({
     required: false,
   },
   date: {
+    type: String,
+    required: false,
+  },
+  fname: {
+    type: String,
+    required: false,
+  },
+  lname: {
+    type: String,
+    required: false,
+  },
+  customerID: {
+    type: String,
+    required: false,
+  },
+  productID: {
     type: String,
     required: false,
   },

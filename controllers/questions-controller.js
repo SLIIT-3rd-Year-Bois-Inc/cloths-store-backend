@@ -42,25 +42,24 @@ router.get("/getQuestion", async (req, res) => {
   }
 });
 
-// Update Reviews
-// router.route("/updateReview/:id").put(async (req, res) => {
-//   console.log("print");
-//   const reviewID = req.params.id;
-//   const { review, rating, image1, image2, image3 } = req.body;
+// Add Answer (Update)
+router.route("/addAnswerToQuestion/:id").put(async (req, res) => {
+  console.log("add answer part");
+  const QuestionID = req.params.id;
+  const { question, date, email, answer } = req.body;
+  const updateQuestion = { question, date, email, answer };
 
-//   const updateReview = { review, rating, image1, image2, image3 };
-
-//   const update = await Review.findByIdAndUpdate(reviewID, updateReview)
-//     .then(() => {
-//       res.status(200).send({ status: "Review Updated" });
-//     })
-//     .catch((err) => {
-//       console.log(err);
-//       res
-//         .status(500)
-//         .send({ status: "error", message: "Error with Updating data" });
-//     });
-// });
+  const update = await Questions.findByIdAndUpdate(QuestionID, updateQuestion)
+    .then(() => {
+      res.status(200).send({ status: "Question Updated" });
+    })
+    .catch((err) => {
+      console.log(err);
+      res
+        .status(500)
+        .send({ status: "error", message: "Error with question data" });
+    });
+});
 
 //Deleting data
 router.route("/deleteQuestion/:id").delete(async (req, res) => {
