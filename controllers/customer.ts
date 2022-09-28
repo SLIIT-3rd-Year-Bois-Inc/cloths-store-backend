@@ -105,6 +105,7 @@ async function Me(req: Request, res: Response) {
       email: 1,
       dob: 1,
       image: 1,
+      _id: 1,
     }).exec();
 
     if (!customer) {
