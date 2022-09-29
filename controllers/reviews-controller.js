@@ -39,6 +39,8 @@ router.get("/getReviews", async (req, res) => {
     const serach = req.query.search || "";
     let rating = req.query.rating || "";
     let pid = req.query.pid || "";
+    const currentCustomerID = req.session.customer_id;
+    console.log("back " + currentCustomerID);
     const total = await Review.countDocuments({
       review: { $regex: serach, $options: "i" },
       rating: { $regex: rating },
@@ -51,6 +53,7 @@ router.get("/getReviews", async (req, res) => {
       rating: { $regex: rating },
       productID: { $regex: pid },
     })
+      .sort({ date: "desc" })
       .limit(page_size)
       .skip(page_size * page)
       .then((review) => {
@@ -58,6 +61,7 @@ router.get("/getReviews", async (req, res) => {
           review,
           total2,
           total: Math.ceil(total / page_size),
+          currentCustomerID,
         });
       });
   } catch (e) {
