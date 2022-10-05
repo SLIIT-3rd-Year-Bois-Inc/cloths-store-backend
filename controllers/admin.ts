@@ -3,6 +3,7 @@ import { logger } from "../logger";
 import { adminAuthRequired } from "../middleware/auth";
 import { cleanBody } from "../middleware/sanitize";
 import { Admin } from "../models/admin";
+import { Customer } from "../models/customer";
 
 async function signIn(req: Request, res: Response) {
   try {
@@ -108,6 +109,77 @@ async function Me(req: Request, res: Response) {
   }
 }
 
+async function statsByGender(req: Request, res: Response) {
+  try {
+    let data = await Customer.aggregate([
+      {
+        $group: {
+          _id: "$gender",
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          gender: "$_id",
+          count: 1,
+          sum: 1,
+        },
+      },
+    ]);
+    res.json(data);
+  } catch (e) {
+    res.sendStatus(500);
+    logger.error(e);
+  }
+}
+
+async function statsByAge(req: Request, res: Response) {
+  try {
+    let data = await Customer.aggregate([
+      {
+        $project: {
+          date: "$dob",
+          age: {
+            $divide: [
+              { $subtract: [new Date(), "$dob"] },
+              365 * 24 * 60 * 60 * 1000,
+            ],
+          },
+        },
+      },
+      {
+        $bucket: {
+          groupBy: "$age",
+          boundaries: [18, 30, 40, 50, 1000],
+        },
+      },
+      {
+        $addFields: {
+          lowerBound: "$_id",
+          upperBound: {
+            $arrayElemAt: [
+              [18, 30, 40, 50, 1000],
+              {
+                $add: [
+                  {
+                    $indexOfArray: [[18, 30, 40, 50, 1000], "$_id"],
+                  },
+                  1,
+                ],
+              },
+            ],
+          },
+        },
+      },
+    ]);
+    res.json(data);
+  } catch (e) {
+    res.sendStatus(500);
+    logger.error(e);
+  }
+}
+
 export function adminRouter() {
   const router = express.Router();
 
@@ -116,6 +188,8 @@ export function adminRouter() {
   router.get("/session", adminAuthRequired, sessionDetails);
   router.delete("/session", adminAuthRequired, signOut);
   router.get("/me", adminAuthRequired, Me);
+  router.get("/stats/by-gender", adminAuthRequired, statsByGender);
+  router.get("/stats/by-age", adminAuthRequired, statsByAge);
 
   return router;
 }
