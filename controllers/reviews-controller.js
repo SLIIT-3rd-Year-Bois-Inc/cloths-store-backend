@@ -53,12 +53,30 @@ router.get("/getReviews", async (req, res) => {
       rating: { $regex: rating },
       productID: { $regex: pid },
     })
-      .sort({ date: "desc" })
+      .sort({ _id: "desc" })
       .limit(page_size)
       .skip(page_size * page)
       .then((review) => {
+        let mapped = review.map((c) => {
+          let obj = c.toObject();
+          console.dir(obj);
+          console.log("11" + req.session.customer_id);
+          console.log("22" + obj.customerID);
+          if (
+            req.session.customer_id &&
+            obj.customerID == req.session.customer_id
+          ) {
+            console.log("11" + req.session.customer_id);
+            console.log("22" + obj.customerID);
+            obj.logged = true;
+          } else {
+            obj.logged = false;
+          }
+          return obj;
+        });
+
         res.json({
-          review,
+          review: mapped,
           total2,
           total: Math.ceil(total / page_size),
           currentCustomerID,

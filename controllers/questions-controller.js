@@ -1,12 +1,14 @@
 import express from "express";
+import { customerAuthRequired } from "../middleware/auth";
 const Questions = require("../models/questions");
 const page_size = 3;
 const router = express.Router();
 
 // Add Questions
-router.post("/addQuestion", async (req, res) => {
+router.post("/addQuestion", customerAuthRequired, async (req, res) => {
   try {
     const data = req.body;
+    data.customer_id = req.session.customer_id;
     console.dir(data);
     const newTest = new Questions(data);
     await newTest.save();
@@ -28,11 +30,30 @@ router.get("/getQuestion", async (req, res) => {
     const total2 = total;
 
     Questions.find({ question: { $regex: serach, $options: "i" } })
+      .sort({ _id: "desc" })
       .limit(page_size)
       .skip(page_size * page)
       .then((question) => {
+        let mapped = question.map((c) => {
+          let obj = c.toObject();
+          console.dir(obj);
+          console.log("11" + req.session.customer_id);
+          console.log("22" + obj.customer_id);
+          if (
+            req.session.customer_id &&
+            obj.customer_id == req.session.customer_id
+          ) {
+            console.log("11" + req.session.customer_id);
+            console.log("22" + obj.customer_id);
+            obj.logged = true;
+          } else {
+            obj.logged = false;
+          }
+          return obj;
+        });
+
         res.json({
-          question,
+          question: mapped,
           total2,
           total: Math.ceil(total / page_size),
         });
