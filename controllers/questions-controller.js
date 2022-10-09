@@ -22,12 +22,17 @@ router.get("/getQuestion", async (req, res) => {
   try {
     const page = parseInt(req.query.page || "0");
     const serach = req.query.search || "";
+    let pid = req.query.pid || "";
     const total = await Questions.countDocuments({
       question: { $regex: serach, $options: "i" },
+      product_id: { $regex: pid },
     });
     const total2 = total;
-
-    Questions.find({ question: { $regex: serach, $options: "i" } })
+    console.log("pid " + pid);
+    Questions.find({
+      question: { $regex: serach, $options: "i" },
+      product_id: { $regex: pid },
+    })
       .sort({ _id: "desc" })
       .limit(page_size)
       .skip(page_size * page)
