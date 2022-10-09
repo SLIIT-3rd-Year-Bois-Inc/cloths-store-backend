@@ -24,6 +24,10 @@ const questionSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
+  product_id: {
+    type: String,
+    required: false,
+  },
 });
 
 module.exports = mongoose.model("Questions", questionSchema);
