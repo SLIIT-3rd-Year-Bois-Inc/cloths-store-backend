@@ -84,7 +84,7 @@ async function signOut(req: Request, res: Response) {
 
 async function Me(req: Request, res: Response) {
   try {
-    let id = req.session.customer_id;
+    let id = req.session.admin_id;
     let admin = await Admin.findById(id, {
       f_name: 1,
       l_name: 1,
