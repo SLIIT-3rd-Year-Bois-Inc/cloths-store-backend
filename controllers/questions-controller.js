@@ -28,7 +28,7 @@ router.get("/getQuestion", async (req, res) => {
       product_id: { $regex: pid },
     });
     const total2 = total;
-    console.log("pid " + pid);
+
     Questions.find({
       question: { $regex: serach, $options: "i" },
       product_id: { $regex: pid },
