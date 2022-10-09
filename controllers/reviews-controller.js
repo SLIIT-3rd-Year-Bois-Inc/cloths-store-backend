@@ -1,6 +1,4 @@
 import express from "express";
-import reviews from "../models/reviews";
-// import { Customer } from "../models/customer";
 import { customerAuthRequired } from "../middleware/auth";
 import { Customer } from "../models/customer";
 const Review = require("../models/reviews");
@@ -11,9 +9,7 @@ const router = express.Router();
 router.post("/addReview", customerAuthRequired, async (req, res) => {
   try {
     let data = req.body;
-    console.dir(req.session.customer_id);
     data.customerID = req.session.customer_id;
-    console.dir(data);
 
     let customer = await Customer.findById(data.customerID, {
       f_name: 1,
@@ -29,7 +25,56 @@ router.post("/addReview", customerAuthRequired, async (req, res) => {
     res.status(500).json({ status: "error", message: "something went wrong" });
   }
   res.status(200).json({ status: "ok" });
-  console.log("works");
+});
+
+// View Review Report
+router.get("/getReviewsRate", async (req, res) => {
+  try {
+    const total2 = await Review.countDocuments({});
+
+    let reviewData = await Review.aggregate([
+      {
+        $group: {
+          _id: "$rating",
+          count: {
+            $sum: 1,
+          },
+        },
+      },
+    ]).exec();
+
+    let rates = [0, 0, 0, 0, 0];
+    let max = 0;
+
+    for (let i = 0; i < reviewData.length; i++) {
+      if (reviewData[i]._id == "1")
+        rates[0] = (reviewData[i].count / total2) * 100;
+      else if (reviewData[i]._id == "2")
+        rates[1] = (reviewData[i].count / total2) * 100;
+      else if (reviewData[i]._id == "3")
+        rates[2] = (reviewData[i].count / total2) * 100;
+      else if (reviewData[i]._id == "4")
+        rates[3] = (reviewData[i].count / total2) * 100;
+      else if (reviewData[i]._id == "5")
+        rates[4] = (reviewData[i].count / total2) * 100;
+    }
+
+    let temp = rates[0];
+    for (let i = 0; i < 5; i++) {
+      if (rates[i] > temp) {
+        max = i + 1;
+        temp = rates[i];
+      } else max = i;
+    }
+
+    res.json({
+      total2,
+      rates,
+      max,
+    });
+  } catch (e) {
+    res.status(500).json({ status: "error", message: "something went wrong" });
+  }
 });
 
 // View Reviews
@@ -40,13 +85,11 @@ router.get("/getReviews", async (req, res) => {
     let rating = req.query.rating || "";
     let pid = req.query.pid || "";
     const currentCustomerID = req.session.customer_id;
-    console.log("back " + currentCustomerID);
     const total = await Review.countDocuments({
       review: { $regex: serach, $options: "i" },
       rating: { $regex: rating },
       productID: { $regex: pid },
     });
-    const total2 = total;
 
     Review.find({
       review: { $regex: serach, $options: "i" },
@@ -59,15 +102,10 @@ router.get("/getReviews", async (req, res) => {
       .then((review) => {
         let mapped = review.map((c) => {
           let obj = c.toObject();
-          console.dir(obj);
-          console.log("11" + req.session.customer_id);
-          console.log("22" + obj.customerID);
           if (
             req.session.customer_id &&
             obj.customerID == req.session.customer_id
           ) {
-            console.log("11" + req.session.customer_id);
-            console.log("22" + obj.customerID);
             obj.logged = true;
           } else {
             obj.logged = false;
@@ -77,7 +115,6 @@ router.get("/getReviews", async (req, res) => {
 
         res.json({
           review: mapped,
-          total2,
           total: Math.ceil(total / page_size),
           currentCustomerID,
         });
@@ -91,9 +128,28 @@ router.get("/getReviews", async (req, res) => {
 router.route("/updateReview/:id").put(async (req, res) => {
   console.log("print");
   const reviewID = req.params.id;
-  const { review, rating, image1, image2, image3 } = req.body;
-
-  const updateReview = { review, rating, image1, image2, image3 };
+  const {
+    review,
+    rating,
+    image1,
+    image2,
+    image3,
+    fname,
+    lname,
+    customerID,
+    productID,
+  } = req.body;
+  const updateReview = {
+    review,
+    rating,
+    image1,
+    image2,
+    image3,
+    fname,
+    lname,
+    customerID,
+    productID,
+  };
 
   const update = await Review.findByIdAndUpdate(reviewID, updateReview)
     .then(() => {
