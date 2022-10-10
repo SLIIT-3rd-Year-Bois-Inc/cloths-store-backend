@@ -3,19 +3,75 @@ import { logger } from "../logger";
 import { customerAuthRequired } from "../middleware/auth";
 import { cleanBody } from "../middleware/sanitize";
 import { Customer } from "../models/customer";
+import { sendCustomerVerificationEmail } from "../sendgrid";
+import { errorResponse } from "../utiles";
 const Product = require("../models/Product");
 
 async function signUp(req: Request, res: Response) {
   try {
     logger.debug(req.body);
     let customer = new Customer(req.body);
-    await customer.save();
-    res.sendStatus(200);
+    let { _id } = await customer.save();
+
+    await sendCustomerVerificationEmail(
+      customer.email,
+      customer.verification_code
+    );
+    res.status(200);
+    res.json({ _id });
     return;
   } catch (e) {
     res.sendStatus(500);
     logger.error(e);
     return;
+  }
+}
+
+async function verify(req: Request, res: Response) {
+  try {
+    let customer_id: string, code: string;
+
+    try {
+      customer_id = Buffer.from(req.query.id as any, "base64").toString(
+        "ascii"
+      );
+      code = req.query.code as any;
+      logger.debug(req.query);
+    } catch (e) {
+      res.sendStatus(400);
+      logger.error(e);
+      return;
+    }
+
+    let customer = await Customer.findById(customer_id, {
+      verified: 1,
+      verification_code: 1,
+    });
+
+    if (!customer) {
+      res.sendStatus(404);
+      return;
+    }
+
+    if (customer.verified) {
+      res.sendStatus(200);
+      return;
+    }
+
+    logger.debug(customer.verification_code);
+    logger.debug(code);
+
+    if (customer.verification_code !== code) {
+      res.sendStatus(401);
+      return;
+    }
+
+    customer.verified = true;
+
+    await customer.save();
+    res.sendStatus(200);
+  } catch (e) {
+    res.sendStatus(500);
   }
 }
 
@@ -28,13 +84,21 @@ async function signIn(req: Request, res: Response) {
     let exists = await Customer.exists(filter).exec();
     if (exists) {
       let customer = await Customer.findOne(filter, {
+        _id: 1,
         f_name: 1,
         l_name: 1,
         password: 1,
+        verified: 1,
       }).exec();
 
       if (!customer) {
-        res.sendStatus(401);
+        res
+          .status(401)
+          .json(
+            errorResponse({
+              message: "Customer does not exist. Sign Up first.",
+            })
+          );
         return;
       }
 
@@ -48,7 +112,9 @@ async function signIn(req: Request, res: Response) {
         res.status(200).json(c);
         return;
       } else {
-        res.sendStatus(400);
+        res
+          .status(400)
+          .json(errorResponse({ message: "Password does not match." }));
         return;
       }
     }
@@ -227,6 +293,7 @@ export function customerRouter() {
   router.get("/me", customerAuthRequired, Me);
   router.patch("/me", customerAuthRequired, patchMe);
   router.post("/me/delete", customerAuthRequired, deleteAccount);
+  router.get("/verify", verify);
 
   return router;
 }

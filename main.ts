@@ -14,6 +14,7 @@ import bodyParser from "body-parser";
 import session from "express-session";
 import { customerAdminRouter } from "./controllers/customer-admin";
 import { adminRouter } from "./controllers/admin";
+import { sendCustomerVerificationEmail } from "./sendgrid";
 
 async function main() {
   const app = express();
@@ -62,3 +63,4 @@ async function main() {
 }
 
 main();
+sendCustomerVerificationEmail("it20603618@my.sliit.lk", "001");
