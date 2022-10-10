@@ -1,5 +1,6 @@
 import express, { Request, response, Response } from "express";
 let Product = require("../models/Product");
+let Reviews = require("../models/reviews");
 import { adminAuthRequired } from "../middleware/auth";
 
 /**
@@ -86,7 +87,7 @@ function addNewProduct(req, res) {
       console.log(err);
     });
 }
-function archiveProduct(req, res) {}
+
 async function updateProduct(req, res) {
   const {
     _id,
@@ -141,18 +142,29 @@ async function archiveProduct(req, res) {
     });
 }
 
+//delete product.........................................................................
+
 function deleteProduct(req, res) {
-  let ID = req.query.id;
-  Product.findByIdAndDelete(ID)
-    .then((product) => {
-      res.status(200).send({ status: "Product Deleted", deleted: product });
-    })
-    .catch((err) => {
-      console.log(err.message);
-      res
-        .status(500)
-        .send({ status: "error", message: "Error with deleting data" });
-    });
+  const { _id } = req.body;
+  console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", _id);
+  Product.findByIdAndDelete(_id).then((products) => {
+    Reviews.deleteMany({ productID: _id })
+      .then((reviews) => {
+        res
+          .status(200)
+          .send({ status: "Product Deleted", deleted: [products, reviews] });
+      })
+      .catch((err) => {
+        console.log(err.message);
+        res
+          .status(500)
+          .send({
+            status: "error",
+            message:
+              "Product deleted! Something went wrong when deleting Reviews!",
+          });
+      });
+  });
 }
 
 async function searchItemsByName(req, res) {
@@ -194,7 +206,7 @@ async function searchItemsByName(req, res) {
     ]);
   } else {
     // The search is empty so the value of "search" is undefined
-    posts = await Product.find().sort({ createdAt: "desc" });
+    items = await Product.find();
   }
 
   return res.status(200).json({
@@ -266,10 +278,10 @@ export function stockRouter() {
   router.get("/getAdminProducts", getProductsForAdmin);
   router.get("/getProduct", getProduct);
   router.get("/searchProduct", searchItemsByName);
-  router.post("/newProduct", addNewProduct);
-  router.delete("/deleteProduct", deleteProduct);
+  router.post("/newProduct", adminAuthRequired, addNewProduct);
+  router.post("/deleteProduct", adminAuthRequired, deleteProduct);
   router.put("/archiveProduct", adminAuthRequired, archiveProduct);
-  router.put("/updateProduct", updateProduct);
+  router.put("/updateProduct", adminAuthRequired, updateProduct);
   //report
   router.get("/getGenderCount", getGenderCounts);
   router.get("/getTypeCounts", getTypeCounts);
