@@ -6,7 +6,32 @@ interface ICustomerMethods {
   passwordMatch: (candidatePassword: string) => Promise<boolean>;
 }
 
-const customerSchema = new mongoose.Schema<{}, {}, ICustomerMethods>({
+type Address = {
+  _id: mongoose.Types.ObjectId;
+  contact_name: string;
+  line_1: string;
+  line_2: string;
+  zip: number;
+  default: boolean;
+};
+
+interface ICustomer {
+  f_name: string;
+  l_name: string;
+  email: string;
+  address: Address[];
+  cart: any[];
+  wish_list: any[];
+  image: string;
+  password: string;
+  gender: string;
+  dob: Date;
+  disabled: boolean;
+  verified: boolean;
+  verification_code: string;
+}
+
+const customerSchema = new mongoose.Schema<ICustomer, {}, ICustomerMethods>({
   f_name: {
     type: String,
     required: true,
@@ -71,6 +96,14 @@ const customerSchema = new mongoose.Schema<{}, {}, ICustomerMethods>({
       },
     },
   ],
+  wish_list: [
+    {
+      product_id: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
   image: { type: String },
   password: { type: String, required: true },
   gender: {
@@ -82,6 +115,14 @@ const customerSchema = new mongoose.Schema<{}, {}, ICustomerMethods>({
   disabled: {
     type: Boolean,
     default: false,
+  },
+  verified: {
+    type: Boolean,
+    default: false,
+  },
+  verification_code: {
+    type: String,
+    default: () => Math.random().toString(36).slice(2),
   },
 });
 

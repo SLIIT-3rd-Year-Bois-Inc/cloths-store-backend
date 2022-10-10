@@ -96,12 +96,8 @@
     "skipLibCheck": true, /* Skip type checking all .d.ts files. */ /* Specify include pattern(s) to match files to be included in compilation. */
   },
   "outDir": "./dist",
-  "include": [
-    "./**/*",
-    "./types"
-  ],
   "exclude": [
-    "node_modules",
+    "**/node_modules",
     "./dist/**/*"
   ],
   "typeRoots": [
