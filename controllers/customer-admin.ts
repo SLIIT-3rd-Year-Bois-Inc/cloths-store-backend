@@ -107,10 +107,10 @@ async function deleteCustomer(req: Request, res: Response) {
 export function customerAdminRouter() {
   const router = express.Router();
 
-  router.get("/all", customers);
-  router.get("/:id", getCustomer);
-  router.patch("/:id", patchCustomer);
-  router.delete("/:id", deleteCustomer);
+  router.get("/all", adminAuthRequired, customers);
+  router.get("/:id", adminAuthRequired, getCustomer);
+  router.patch("/:id", adminAuthRequired, patchCustomer);
+  router.delete("/:id", adminAuthRequired, deleteCustomer);
 
   return router;
 }
