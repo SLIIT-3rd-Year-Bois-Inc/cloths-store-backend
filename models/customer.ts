@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import { logger } from "../logger";
-
+import crypto from "crypto";
 interface ICustomerMethods {
   passwordMatch: (candidatePassword: string) => Promise<boolean>;
 }
@@ -122,9 +122,13 @@ const customerSchema = new mongoose.Schema<ICustomer, {}, ICustomerMethods>({
   },
   verification_code: {
     type: String,
-    default: () => Math.random().toString(36).slice(2),
   },
 });
+
+async function randomToken(size: number) {
+  let bytes = await crypto.randomBytes(size);
+  return bytes.toString("hex");
+}
 
 // Validates email
 customerSchema.path("email").validate(async (email: string) => {
@@ -133,8 +137,8 @@ customerSchema.path("email").validate(async (email: string) => {
   return emailRegex.test(email);
 }, "Invalid email");
 
-// Hash the password
-customerSchema.pre("save", function (next) {
+// Hash the password and generate the verification code
+customerSchema.pre("save", async function (next) {
   let customer = this as any;
   logger.debug(customer);
 
@@ -145,6 +149,10 @@ customerSchema.pre("save", function (next) {
   const hashedPassword = bcrypt.hashSync(customer.password, salt);
 
   customer.password = hashedPassword;
+
+  // Add the verification code
+  let code = await randomToken(4);
+  customer.verification_code = code;
   next();
 });
 
