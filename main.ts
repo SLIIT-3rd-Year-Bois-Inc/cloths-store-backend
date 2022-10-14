@@ -14,6 +14,8 @@ import bodyParser from "body-parser";
 import session from "express-session";
 import { customerAdminRouter } from "./controllers/customer-admin";
 import { adminRouter } from "./controllers/admin";
+import { sendCustomerVerificationEmail } from "./sendgrid";
+import { orderRouter } from "./controllers/orders";
 
 async function main() {
   const app = express();
@@ -51,6 +53,7 @@ async function main() {
   app.use("/api/clothNeeds", clothsNeedsRouter());
   app.use("/api/admin/", adminRouter());
   app.use("/api/admin/customer", customerAdminRouter());
+  app.use("/api/order", orderRouter());
 
   app.get("/", (_, res) =>
     res.send("Hello! This is the Cloths Store Backend.")
@@ -62,3 +65,4 @@ async function main() {
 }
 
 main();
+sendCustomerVerificationEmail("it20603618@my.sliit.lk", "001");
