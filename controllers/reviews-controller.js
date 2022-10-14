@@ -30,9 +30,16 @@ router.post("/addReview", customerAuthRequired, async (req, res) => {
 // View Review Report
 router.get("/getReviewsRate", async (req, res) => {
   try {
-    const total2 = await Review.countDocuments({});
-
+    const pid = req.query.pid;
+    const total2 = await Review.countDocuments({
+      productID: { $regex: pid },
+    });
     let reviewData = await Review.aggregate([
+      {
+        $match: {
+          productID: pid,
+        },
+      },
       {
         $group: {
           _id: "$rating",
