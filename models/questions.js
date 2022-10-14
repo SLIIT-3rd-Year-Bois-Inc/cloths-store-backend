@@ -28,6 +28,14 @@ const questionSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
+  title: {
+    type: String,
+    required: false,
+  },
+  description: {
+    type: String,
+    required: false,
+  },
 });
 
 module.exports = mongoose.model("Questions", questionSchema);
