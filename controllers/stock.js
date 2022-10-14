@@ -1,6 +1,7 @@
 import express, { Request, response, Response } from "express";
 let Product = require("../models/Product");
 let Reviews = require("../models/reviews");
+const Questions = require("../models/questions");
 import { adminAuthRequired } from "../middleware/auth";
 
 /**
@@ -147,24 +148,41 @@ async function archiveProduct(req, res) {
 function deleteProduct(req, res) {
   const { _id } = req.body;
   console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", _id);
-  Product.findByIdAndDelete(_id).then((products) => {
-    Reviews.deleteMany({ productID: _id })
-      .then((reviews) => {
-        res
-          .status(200)
-          .send({ status: "Product Deleted", deleted: [products, reviews] });
-      })
-      .catch((err) => {
-        console.log(err.message);
-        res
-          .status(500)
-          .send({
+  Product.findByIdAndDelete(_id)
+    .then((products) => {
+      Reviews.deleteMany({ productID: _id })
+        .then((reviews) => {
+          Questions.deleteMany({ product_id: _id })
+            .then((questions) => {
+              res
+                .status(200)
+                .send({
+                  status: "Product Deleted",
+                  deleted: [products, reviews, questions],
+                });
+            })
+            .catch(() => {
+              res.status(500).send({
+                status: "error",
+                message:
+                  "Product deleted! Something went wrong when deleting Qestions!",
+              });
+            });
+        })
+        .catch((err) => {
+          res.status(500).send({
             status: "error",
             message:
               "Product deleted! Something went wrong when deleting Reviews!",
           });
+        });
+    })
+    .catch((err) => {
+      res.status(500).send({
+        status: "error",
+        message: "Product deleted! Something went wrong when deleting Product!",
       });
-  });
+    });
 }
 
 async function searchItemsByName(req, res) {
