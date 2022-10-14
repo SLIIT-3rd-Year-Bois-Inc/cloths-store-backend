@@ -3,7 +3,13 @@ import { logger } from "../logger";
 const Product = require("./Product");
 
 interface IOrder {
-  product_ids: mongoose.ObjectId[];
+  products: [
+    {
+      size: string;
+      qty: number;
+      product_id: mongoose.ObjectId;
+    }
+  ];
   customer_id: mongoose.ObjectId;
   total: number;
   placed_time: Date;
@@ -17,10 +23,19 @@ const orderSchema = new mongoose.Schema<IOrder>(
       type: mongoose.Types.ObjectId,
       required: true,
     },
-    product_ids: {
-      type: [mongoose.Types.ObjectId],
-      required: true,
-    },
+    products: [
+      {
+        size: {
+          type: String,
+        },
+        qty: {
+          type: Number,
+        },
+        product_id: {
+          type: mongoose.Types.ObjectId,
+        },
+      },
+    ],
     placed_time: {
       type: Date,
       required: true,
@@ -50,9 +65,10 @@ const orderSchema = new mongoose.Schema<IOrder>(
 );
 
 orderSchema.pre("save", async function () {
-  let res = await Product.find({ _id: { $in: this.product_ids } });
+  let p_ids = this.products.map((p) => p.product_id);
+  let res = await Product.find({ _id: { $in: p_ids } });
 
-  if (!res || res.length != this.product_ids.length) {
+  if (!res || res.length != p_ids.length) {
     throw new Error("One or more products doesn't exist in the Database");
   }
 
@@ -74,20 +90,20 @@ export function aggregateOrdersWithProducts(customer_id: string) {
     },
     {
       $unwind: {
-        path: "$product_ids",
+        path: "$products",
       },
     },
     {
       $lookup: {
         from: "products",
-        localField: "product_ids",
+        localField: "products.product_id",
         foreignField: "_id",
-        as: "products",
+        as: "products.resolved",
       },
     },
     {
       $unwind: {
-        path: "$products",
+        path: "$products.resolved",
       },
     },
     {
