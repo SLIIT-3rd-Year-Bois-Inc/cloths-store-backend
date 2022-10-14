@@ -65,4 +65,45 @@ orderSchema.pre("save", async function () {
   this.total = total;
 });
 
+export function aggregateOrdersWithProducts(customer_id: string) {
+  return [
+    {
+      $match: {
+        customer_id: mongoose.Types.ObjectId.createFromHexString(customer_id),
+      },
+    },
+    {
+      $unwind: {
+        path: "$product_ids",
+      },
+    },
+    {
+      $lookup: {
+        from: "products",
+        localField: "product_ids",
+        foreignField: "_id",
+        as: "products",
+      },
+    },
+    {
+      $unwind: {
+        path: "$products",
+      },
+    },
+    {
+      $group: {
+        _id: "$_id",
+        products: {
+          $push: "$products",
+        },
+        placed_time: {
+          $first: "$placed_time",
+        },
+        state: {
+          $first: "$state",
+        },
+      },
+    },
+  ];
+}
 export const Order = mongoose.model("orders", orderSchema);

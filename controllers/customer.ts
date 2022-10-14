@@ -1,8 +1,10 @@
 import express, { Request, Response } from "express";
+import mongoose, { get } from "mongoose";
 import { logger } from "../logger";
 import { customerAuthRequired } from "../middleware/auth";
 import { cleanBody } from "../middleware/sanitize";
 import { Customer } from "../models/customer";
+import { CustomerPaymentMethod } from "../models/customer-payment";
 import { sendCustomerVerificationEmail } from "../sendgrid";
 import { errorResponse } from "../utiles";
 const Product = require("../models/Product");
@@ -92,13 +94,11 @@ async function signIn(req: Request, res: Response) {
       }).exec();
 
       if (!customer) {
-        res
-          .status(401)
-          .json(
-            errorResponse({
-              message: "Customer does not exist. Sign Up first.",
-            })
-          );
+        res.status(401).json(
+          errorResponse({
+            message: "Customer does not exist. Sign Up first.",
+          })
+        );
         return;
       }
 
@@ -281,6 +281,76 @@ async function deleteAccount(req: Request, res: Response) {
   }
 }
 
+async function addCustomerPaymentMethod(req: Request, res: Response) {
+  try {
+    let body = req.body;
+    body.customer_id = req.session.customer_id;
+
+    let payment_method = new CustomerPaymentMethod(req.body);
+    await payment_method.save();
+
+    res.sendStatus(200);
+  } catch (e) {
+    res.sendStatus(500);
+    logger.error(e);
+  }
+}
+
+async function getCustomerPaymentMethods(req: Request, res: Response) {
+  try {
+    const projection = {
+      name_on_card: 1,
+      card_number: 1,
+    };
+
+    let payment_methods = await CustomerPaymentMethod.find(
+      { customer_id: req.session.customer_id },
+      projection
+    );
+
+    // Send only the last characters of the card number
+    for (let p_method of payment_methods) {
+      p_method.card_number = p_method.card_number % 100000;
+    }
+
+    res.json(payment_methods);
+  } catch (e) {
+    res.sendStatus(500);
+    logger.error(e);
+  }
+}
+
+async function deleteCustomerPaymentMethods(req: Request, res: Response) {
+  try {
+    let id = req.params.id;
+    let method = await CustomerPaymentMethod.findOne({
+      customer_id: req.session.customer_id,
+      _id: id,
+    });
+
+    if (!method) {
+      res.sendStatus(400);
+      return;
+    }
+
+    let result = await method.delete();
+
+    logger.debug(result);
+    res.sendStatus(200);
+  } catch (e) {
+    res.sendStatus(500);
+    logger.error(e);
+  }
+}
+
+async function patchCustomerPaymentMethod(req: Request, res: Response) {
+  try {
+  } catch (e) {
+    res.sendStatus(500);
+    logger.error(e);
+  }
+}
+
 export function customerRouter() {
   const router = express.Router();
 
@@ -294,6 +364,25 @@ export function customerRouter() {
   router.patch("/me", customerAuthRequired, patchMe);
   router.post("/me/delete", customerAuthRequired, deleteAccount);
   router.get("/verify", verify);
-
+  router.post(
+    "/payment-method",
+    customerAuthRequired,
+    addCustomerPaymentMethod
+  );
+  router.get(
+    "/payment-method",
+    customerAuthRequired,
+    getCustomerPaymentMethods
+  );
+  router.delete(
+    "/payment-method/:id",
+    customerAuthRequired,
+    deleteCustomerPaymentMethods
+  );
+  router.patch(
+    "/payment-method/:id",
+    customerAuthRequired,
+    patchCustomerPaymentMethod
+  );
   return router;
 }

@@ -1,7 +1,8 @@
 import express, { Request, Response } from "express";
+import mongoose from "mongoose";
 import { logger } from "../logger";
 import { customerAuthRequired } from "../middleware/auth";
-import { Order } from "../models/order";
+import { aggregateOrdersWithProducts, Order } from "../models/order";
 
 async function placeOrder(req: Request, res: Response) {
   try {
@@ -31,8 +32,8 @@ async function getCustomerOrders(req: Request, res: Response) {
     let from_date: Date;
 
     try {
-      from = parseInt(req.query.from as string);
-      to = parseInt(req.query.to as string);
+      from = parseInt(req.query.from as string) || 0;
+      to = parseInt(req.query.to as string) || 10;
       from_date = new Date((req.query.from_date as string) ?? "");
     } catch (e) {
       logger.error(e);
@@ -42,7 +43,9 @@ async function getCustomerOrders(req: Request, res: Response) {
 
     try {
       const total = await Order.find().count().exec();
-      const data = await Order.find({})
+      const data = await Order.aggregate(
+        aggregateOrdersWithProducts(req.session.customer_id || "")
+      )
         .skip(from)
         .limit(to - from)
         .exec();
