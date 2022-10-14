@@ -1,6 +1,37 @@
-const { default: mongoose } = require("mongoose");
+import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
+import { logger } from "../logger";
+import crypto from "crypto";
+interface ICustomerMethods {
+  passwordMatch: (candidatePassword: string) => Promise<boolean>;
+}
 
-const customerSchema = new mongoose.Schema({
+type Address = {
+  _id: mongoose.Types.ObjectId;
+  contact_name: string;
+  line_1: string;
+  line_2: string;
+  zip: number;
+  default: boolean;
+};
+
+interface ICustomer {
+  f_name: string;
+  l_name: string;
+  email: string;
+  address: Address[];
+  cart: any[];
+  wish_list: any[];
+  image: string;
+  password: string;
+  gender: string;
+  dob: Date;
+  disabled: boolean;
+  verified: boolean;
+  verification_code: string;
+}
+
+const customerSchema = new mongoose.Schema<ICustomer, {}, ICustomerMethods>({
   f_name: {
     type: String,
     required: true,
@@ -25,7 +56,7 @@ const customerSchema = new mongoose.Schema({
     {
       _id: {
         type: mongoose.Types.ObjectId,
-        default: mongoose.Types.ObjectId().toHexString(),
+        default: new mongoose.Types.ObjectId().toHexString(),
         index: { sparse: true },
       },
       contact_name: {
@@ -65,15 +96,39 @@ const customerSchema = new mongoose.Schema({
       },
     },
   ],
+  wish_list: [
+    {
+      product_id: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
   image: { type: String },
   password: { type: String, required: true },
   gender: {
     type: String,
     required: true,
-    enum: ["F", "M", "O", "N"],
+    enum: ["female", "male", "rather-not-say", "N"],
   },
   dob: { type: Date, required: true },
+  disabled: {
+    type: Boolean,
+    default: false,
+  },
+  verified: {
+    type: Boolean,
+    default: false,
+  },
+  verification_code: {
+    type: String,
+  },
 });
+
+async function randomToken(size: number) {
+  let bytes = await crypto.randomBytes(size);
+  return bytes.toString("hex");
+}
 
 // Validates email
 customerSchema.path("email").validate(async (email: string) => {
@@ -82,6 +137,31 @@ customerSchema.path("email").validate(async (email: string) => {
   return emailRegex.test(email);
 }, "Invalid email");
 
+// Hash the password and generate the verification code
+customerSchema.pre("save", async function (next) {
+  let customer = this as any;
+  logger.debug(customer);
+
+  // Only hash the password if it has been modified (or is new)
+  if (!customer.isModified("password")) return next();
+
+  const salt = bcrypt.genSaltSync(10);
+  const hashedPassword = bcrypt.hashSync(customer.password, salt);
+
+  customer.password = hashedPassword;
+
+  // Add the verification code
+  let code = await randomToken(4);
+  customer.verification_code = code;
+  next();
+});
+
+customerSchema.methods.passwordMatch = async function (
+  candidatePassword: string
+) {
+  console.log(this);
+  return await bcrypt.compare(candidatePassword, this.password);
+};
 /* customerSchema
     .path('dob')
     .validate(async (date: string) => {
@@ -92,4 +172,5 @@ customerSchema.path("email").validate(async (email: string) => {
     }, "Date needs to be at least 18 years ago")
  */
 
+customerSchema.index({ f_name: "text", l_name: "text", email: "text" });
 export const Customer = mongoose.model("Customer", customerSchema);
