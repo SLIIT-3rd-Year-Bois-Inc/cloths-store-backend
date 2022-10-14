@@ -68,10 +68,6 @@ orderSchema.pre("save", async function () {
   let p_ids = this.products.map((p) => p.product_id);
   let res = await Product.find({ _id: { $in: p_ids } });
 
-  if (!res || res.length != p_ids.length) {
-    throw new Error("One or more products doesn't exist in the Database");
-  }
-
   let total = 0;
 
   for (const r of res) {
