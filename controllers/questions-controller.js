@@ -31,6 +31,12 @@ router.get("/getQuestion", async (req, res) => {
     });
     const total2 = total;
 
+    let logged = false;
+    const log = req.session.customer_id;
+    if (log != null) {
+      logged = true;
+    }
+
     Questions.find({
       question: { $regex: serach, $options: "i" },
       product_id: { $regex: pid },
@@ -56,6 +62,7 @@ router.get("/getQuestion", async (req, res) => {
           question: mapped,
           total2,
           total: Math.ceil(total / page_size),
+          logged,
         });
       });
   } catch (e) {
