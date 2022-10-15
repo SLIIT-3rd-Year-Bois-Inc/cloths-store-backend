@@ -246,9 +246,106 @@ async function popularProducts(req: Request, res: Response) {
   }
 }
 
-async function addToWishlist(req: Request, res: Response) {}
+async function addToWishlist(req: Request, res: Response) {
+  try {
+    let product_id: string = req.body.id;
+    let customer = await Customer.findById(req.session.customer_id, {
+      wish_list: 1,
+    });
 
-async function getWishlist(req: Request, res: Response) {}
+    if (!customer) {
+      res.sendStatus(400);
+      return;
+    }
+
+    let exist = false;
+    for (let c of customer.wish_list) {
+      if (c.equals(product_id)) {
+        exist = true;
+        break;
+      }
+    }
+
+    if (!exist) {
+      customer.wish_list.push(new mongoose.Types.ObjectId(product_id));
+      await customer.save();
+    }
+
+    res.sendStatus(200);
+  } catch (e) {
+    res.sendStatus(500);
+    logger.error(e);
+  }
+}
+
+async function getWishlist(req: Request, res: Response) {
+  try {
+    let data = await Customer.aggregate([
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(req.session.customer_id ?? ""),
+        },
+      },
+      {
+        $unwind: {
+          path: "$wish_list",
+        },
+      },
+      {
+        $lookup: {
+          from: "products",
+          localField: "wish_list",
+          foreignField: "_id",
+          as: "result",
+        },
+      },
+      {
+        $unwind: {
+          path: "$result",
+        },
+      },
+      {
+        $group: {
+          _id: "$_id",
+          result: {
+            $push: "$result",
+          },
+        },
+      },
+    ]);
+
+    res.json(data);
+  } catch (e) {
+    res.sendStatus(500);
+    logger.error(e);
+  }
+}
+
+async function deleteWishlist(req: Request, res: Response) {
+  try {
+    let id = new mongoose.Types.ObjectId(req.params.id);
+    let customer = await Customer.findById(req.session.customer_id, {
+      wish_list: 1,
+    });
+
+    if (!customer) {
+      res.sendStatus(400);
+      return;
+    }
+
+    for (let i = 0; i < customer.wish_list.length; i++) {
+      if (customer.wish_list[i].equals(id)) {
+        customer.wish_list.splice(i, 1);
+      }
+    }
+
+    await customer.save();
+    res.sendStatus(200);
+  } catch (e) {
+    res.sendStatus(500);
+    logger.error(e);
+  }
+}
 
 async function deleteAccount(req: Request, res: Response) {
   try {
@@ -345,6 +442,30 @@ async function deleteCustomerPaymentMethods(req: Request, res: Response) {
 
 async function patchCustomerPaymentMethod(req: Request, res: Response) {
   try {
+    let body = req.body;
+    let id = req.params.id;
+    let update: any = {};
+
+    // Allow only fields in allowed to be updated.
+    let allowed = ["default"];
+
+    for (let key in body) {
+      if (allowed.includes(key)) {
+        update[key] = { $set: body[key] };
+      }
+    }
+
+    let result = await CustomerPaymentMethod.findOneAndUpdate(
+      { _id: id, customer_id: req.session.customer_id },
+      update
+    );
+
+    if (!result) {
+      res.sendStatus(400);
+      return;
+    }
+
+    res.sendStatus(200);
   } catch (e) {
     res.sendStatus(500);
     logger.error(e);
@@ -384,5 +505,9 @@ export function customerRouter() {
     customerAuthRequired,
     patchCustomerPaymentMethod
   );
+  router.post("/wishlist", customerAuthRequired, addToWishlist);
+  router.get("/wishlist", customerAuthRequired, getWishlist);
+  router.delete("/wishlist/:id", customerAuthRequired, deleteWishlist);
+
   return router;
 }

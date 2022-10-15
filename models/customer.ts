@@ -21,7 +21,7 @@ interface ICustomer {
   email: string;
   address: Address[];
   cart: any[];
-  wish_list: any[];
+  wish_list: mongoose.Types.ObjectId[];
   image: string;
   password: string;
   gender: string;
@@ -96,14 +96,9 @@ const customerSchema = new mongoose.Schema<ICustomer, {}, ICustomerMethods>({
       },
     },
   ],
-  wish_list: [
-    {
-      product_id: {
-        type: String,
-        required: true,
-      },
-    },
-  ],
+  wish_list: {
+    type: [mongoose.Types.ObjectId],
+  },
   image: { type: String },
   password: { type: String, required: true },
   gender: {
