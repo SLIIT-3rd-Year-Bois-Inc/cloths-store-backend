@@ -4,6 +4,7 @@ import { adminAuthRequired } from "../middleware/auth";
 import { cleanBody } from "../middleware/sanitize";
 import { Admin } from "../models/admin";
 import { Customer } from "../models/customer";
+import { Order } from "../models/order";
 
 async function signIn(req: Request, res: Response) {
   try {
@@ -180,6 +181,18 @@ async function statsByAge(req: Request, res: Response) {
   }
 }
 
+async function generalStatistics(req: Request, res: Response) {
+  try {
+    let customer_count_total = await Customer.count({ disabled: false });
+    res.json({
+      customer_count_total,
+    });
+  } catch (e) {
+    res.sendStatus(500);
+    logger.error(e);
+  }
+}
+
 export function adminRouter() {
   const router = express.Router();
 
@@ -190,6 +203,6 @@ export function adminRouter() {
   router.get("/me", adminAuthRequired, Me);
   router.get("/stats/by-gender", adminAuthRequired, statsByGender);
   router.get("/stats/by-age", adminAuthRequired, statsByAge);
-
+  router.get("/stats/general", adminAuthRequired, generalStatistics);
   return router;
 }
