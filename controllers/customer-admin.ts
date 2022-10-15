@@ -19,9 +19,11 @@ async function customers(req: Request, res: Response) {
   try {
     const total = await Customer.find().count().exec();
     const projection = {
+      _id: 1,
       f_name: 1,
       l_name: 1,
       email: 1,
+      disabled: 1,
     };
 
     const data = await Customer.find(
@@ -76,7 +78,7 @@ async function patchCustomer(req: Request, res: Response) {
 
     for (let key in update) {
       if (allowed.includes(key)) {
-        m_update[key] = { $set: update[key] };
+        m_update[key] = update[key];
       }
     }
 
