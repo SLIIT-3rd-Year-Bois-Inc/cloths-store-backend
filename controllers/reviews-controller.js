@@ -185,4 +185,68 @@ router.route("/deleteReviews/:id").delete(async (req, res) => {
     });
 });
 
+// View Admin Review Report
+router.get("/getAdminReviews", async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit || "10");
+    const hilo = parseInt(req.query.hilo || "-1");
+    console.log(limit);
+    console.log(hilo);
+    let adminReviewDataStage1 = await Review.aggregate([
+      {
+        $group: {
+          _id: {
+            pid: "$productID",
+            rating: "$rating",
+          },
+          count: {
+            $sum: 1,
+          },
+        },
+      },
+      {
+        $group: {
+          _id: "$_id.pid",
+          counts: {
+            $push: {
+              rating: "$_id.rating",
+              count: "$count",
+            },
+          },
+        },
+      },
+      {
+        $sort: {
+          counts: hilo,
+        },
+      },
+      {
+        $project: {
+          oid: {
+            $toObjectId: "$_id",
+          },
+          count: "$counts",
+        },
+      },
+      {
+        $lookup: {
+          from: "products",
+          localField: "oid",
+          foreignField: "_id",
+          as: "namess",
+        },
+      },
+      {
+        $limit: limit,
+      },
+    ]).exec();
+
+    res.json({
+      adminReviewDataStage1,
+    });
+  } catch (e) {
+    res.status(500).json({ status: "error", message: "something went wrong" });
+  }
+});
+
 module.exports = router;
