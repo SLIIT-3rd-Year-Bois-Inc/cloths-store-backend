@@ -1,11 +1,42 @@
-# This is the Backend of the "Cloths" Online Shopping Store
+# Group-ID : SEJ020
+## Project name : Cloths Online Shopping Store
+## Group Details :
 
-This is the Backend for the clothing application.   
+**Member Details :**
+<table>
+<tr> 
+  <th>Name</th>
+  <th>Student ID</th> 
+  <th>Username</th> 
+</tr> 
+<tr>
+  <td>Member 01 </td>
+  <td>IT20619794 </td>
+  <td>SenalWeerasekara </td>
+</tr>
+<tr>
+  <td>Member 02 </td>
+  <td>IT20618568 </td>
+  <td>I.N Magammulla </td>
+</tr>
+<tr>
+  <td>Member 03 </td>
+  <td>IT20603618 </td>
+  <td>Weerakkody D.K </td>
+</tr>
+<tr>
+  <td>Member 04 </td>
+  <td>IT20081034 </td>
+  <td>P.G.N.Sashmitha </td>
+</tr>
+</table>
 
-## How to start development?
+## Project Description 
+This is an MERN stack application develouped for an Online Clothing store. This containt the Backend section of the application. 
 
-In the project directory, run:
-
-### `npm run dev`
-
-It will start the backend for the clothing store application.
+## Technologies 
+Node JS - The JavaScript runtime for the backend
+Express - The JavaScript Framework used to create the HTTP Server
+Mongodb - NoSQL type DBMS as the database
+Mongoose - An Object Relational Mapper to represent database documents as objects in the code
+Mongodb Sanitize - Used to prevent NoSQL injection attacks
