@@ -8,4 +8,4 @@ In the project directory, run:
 
 ### `npm run dev`
 
-It will run the app in the development mode.
+It will start the backend for the clothing store application.
