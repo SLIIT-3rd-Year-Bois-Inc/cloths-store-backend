@@ -44,7 +44,7 @@ Mongodb Sanitize - Used to prevent NoSQL injection attacks <br>
 ## To run this project <br>
   1. Clone the project
   ```bash
-  git clone https://github.com/SLIIT-3rd-Year-Bois-Inc/cloths-store-frontend
+  git clone https://github.com/SLIIT-3rd-Year-Bois-Inc/cloths-store-backend
   ```
   2. To start development
   ```bash
