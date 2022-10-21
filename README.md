@@ -35,8 +35,8 @@
 This is an MERN stack application develouped for an Online Clothing store. This containt the Backend section of the application. 
 
 ## Technologies 
-Node JS - The JavaScript runtime for the backend
-Express - The JavaScript Framework used to create the HTTP Server
-Mongodb - NoSQL type DBMS as the database
-Mongoose - An Object Relational Mapper to represent database documents as objects in the code
-Mongodb Sanitize - Used to prevent NoSQL injection attacks
+Node JS - The JavaScript runtime for the backend <br>
+Express - The JavaScript Framework used to create the HTTP Server <br>
+Mongodb - NoSQL type DBMS as the database <br>
+Mongoose - An Object Relational Mapper to represent database documents as objects in the code <br>
+Mongodb Sanitize - Used to prevent NoSQL injection attacks <br>
