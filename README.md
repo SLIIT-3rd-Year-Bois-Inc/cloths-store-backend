@@ -40,3 +40,13 @@ Express - The JavaScript Framework used to create the HTTP Server <br>
 Mongodb - NoSQL type DBMS as the database <br>
 Mongoose - An Object Relational Mapper to represent database documents as objects in the code <br>
 Mongodb Sanitize - Used to prevent NoSQL injection attacks <br>
+
+## To run this project <br>
+  1. Clone the project
+  ```bash
+  git clone https://github.com/SLIIT-3rd-Year-Bois-Inc/cloths-store-frontend
+  ```
+  2. To start development
+  ```bash
+  npm run dev
+  ```
